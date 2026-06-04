@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post Dashboard</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body{
+        background:#f4f4f4;
+        padding:20px;
+    }
+
+    h1{
+        text-align:center;
+        margin-bottom:20px;
+    }
+
+    .posts-container{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+        gap:20px;
+    }
+
+    .card{
+        background:white;
+        border:2px solid #ddd;
+        border-radius:10px;
+        padding:15px;
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .card h3{
+        margin-bottom:10px;
+        color:#333;
+    }
+
+    .card p{
+        flex-grow:1;
+        margin-bottom:15px;
+        color:#555;
+    }
+
+    .actions{
+        display:flex;
+        gap:10px;
+    }
+
+    button{
+        border:none;
+        padding:8px 12px;
+        border-radius:5px;
+        cursor:pointer;
+        color:white;
+    }
+
+    .edit-btn{
+        background:#007bff;
+    }
+
+    .delete-btn{
+        background:#dc3545;
+    }
+
+    button:hover{
+        opacity:0.9;
+    }
+</style>
+</head>
+<body>
+
+<h1>Post Dashboard</h1>
+
+<div class="posts-container" id="postsContainer"></div>
+
+<script>
+
+const API_URL = "https://jsonplaceholder.typicode.com/posts";
+const postsContainer = document.getElementById("postsContainer");
+
+/* Fetch and Display Posts */
+async function fetchPosts() {
+    try {
+        const response = await fetch(API_URL);
+        const posts = await response.json();
+
+        postsContainer.innerHTML = "";
+
+        posts.forEach(post => {
+            createPostCard(post);
+        });
+
+    } catch (error) {
+        console.error("Error fetching posts:", error);
+    }
+}
+
+/* Create Card */
+function createPostCard(post) {
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.id = `post-${post.id}`;
+
+    card.innerHTML = `
+        <h3 id="title-${post.id}">${post.title}</h3>
+        <p>${post.body}</p>
+
+        <div class="actions">
+            <button class="edit-btn" onclick="editPost(${post.id})">
+                Edit
+            </button>
+
+            <button class="delete-btn" onclick="deletePost(${post.id})">
+                Delete
+            </button>
+        </div>
+    `;
+
+    postsContainer.appendChild(card);
+}
+
+/* Edit Post */
+async function editPost(id) {
+
+    const titleElement = document.getElementById(`title-${id}`);
+    const currentTitle = titleElement.textContent;
+
+    const newTitle = prompt("Enter new title:", currentTitle);
+
+    if (!newTitle || newTitle.trim() === "") {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: id,
+                title: newTitle
+            })
+        });
+
+        const updatedPost = await response.json();
+
+        titleElement.textContent = updatedPost.title;
+
+    } catch (error) {
+        console.error("Error updating post:", error);
+    }
+}
+
+/* Delete Post */
+async function deletePost(id) {
+
+    try {
+
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            document.getElementById(`post-${id}`).remove();
+        }
+
+    } catch (error) {
+        console.error("Error deleting post:", error);
+    }
+}
+
+/* Load Posts */
+fetchPosts();
+
+</script>
+
+</body>
+</html>
